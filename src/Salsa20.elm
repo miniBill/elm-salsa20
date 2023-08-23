@@ -1,4 +1,7 @@
-module Salsa20 exposing (salsa20)
+module Salsa20 exposing
+    ( salsa20
+    , SalsaBlock
+    )
 
 {-|
 
