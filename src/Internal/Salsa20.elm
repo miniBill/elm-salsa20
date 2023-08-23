@@ -1,4 +1,4 @@
-module Internal.Salsa20 exposing (columnround, doubleround, plus, quarterround, rotateLeftBy, rowround, xor)
+module Internal.Salsa20 exposing (columnround, doubleround, plus, quarterround, rotateLeftBy, rowround, salsa20, xor)
 
 import Bitwise
 
@@ -155,3 +155,38 @@ columnround { y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y
 doubleround : Int32_16 -> Int32_16
 doubleround x =
     rowround (columnround x)
+
+
+salsa20 : Int32_16 -> Int32_16
+salsa20 x =
+    plus32_16 x (doubleround_n 10 x)
+
+
+doubleround_n : Int -> Int32_16 -> Int32_16
+doubleround_n n x =
+    if n <= 0 then
+        x
+
+    else
+        doubleround_n (n - 1) (doubleround x)
+
+
+plus32_16 : Int32_16 -> Int32_16 -> Int32_16
+plus32_16 arg1 arg2 =
+    { y0 = plus arg1.y0 arg2.y0
+    , y1 = plus arg1.y1 arg2.y1
+    , y2 = plus arg1.y2 arg2.y2
+    , y3 = plus arg1.y3 arg2.y3
+    , y4 = plus arg1.y4 arg2.y4
+    , y5 = plus arg1.y5 arg2.y5
+    , y6 = plus arg1.y6 arg2.y6
+    , y7 = plus arg1.y7 arg2.y7
+    , y8 = plus arg1.y8 arg2.y8
+    , y9 = plus arg1.y9 arg2.y9
+    , y10 = plus arg1.y10 arg2.y10
+    , y11 = plus arg1.y11 arg2.y11
+    , y12 = plus arg1.y12 arg2.y12
+    , y13 = plus arg1.y13 arg2.y13
+    , y14 = plus arg1.y14 arg2.y14
+    , y15 = plus arg1.y15 arg2.y15
+    }
