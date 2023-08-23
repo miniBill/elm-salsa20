@@ -1,4 +1,4 @@
-module REPLACEME exposing (replaceMe)
+module Salsa20 exposing (replaceMe)
 
 {-| REPLACEME
 
