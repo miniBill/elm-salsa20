@@ -1,4 +1,4 @@
-module Internal.Salsa20 exposing (columnround, doubleround, plus, quarterround, rotateLeftBy, rowround, salsa20, xor)
+module Internal.Salsa20 exposing (Int32_16, columnround, doubleround, littleendian, littleendianInverse, plus, quarterround, rotateLeftBy, rowround, salsa20_16, xor)
 
 import Bitwise
 
@@ -20,14 +20,19 @@ rotateLeftBy c v =
     let
         high : Int
         high =
-            Bitwise.shiftLeftBy c v
-                |> Bitwise.shiftRightZfBy 0
+            safeShiftLeft c v
 
         low : Int
         low =
             Bitwise.shiftRightZfBy (32 - c) v
     in
     low + high
+
+
+safeShiftLeft : Int -> Int -> Int
+safeShiftLeft c v =
+    Bitwise.shiftLeftBy c v
+        |> Bitwise.shiftRightZfBy 0
 
 
 quarterround : Int -> Int -> Int -> Int -> { z0 : Int, z1 : Int, z2 : Int, z3 : Int }
@@ -157,11 +162,6 @@ doubleround x =
     rowround (columnround x)
 
 
-salsa20 : Int32_16 -> Int32_16
-salsa20 x =
-    plus32_16 x (doubleround_n 10 x)
-
-
 doubleround_n : Int -> Int32_16 -> Int32_16
 doubleround_n n x =
     if n <= 0 then
@@ -171,8 +171,13 @@ doubleround_n n x =
         doubleround_n (n - 1) (doubleround x)
 
 
-plus32_16 : Int32_16 -> Int32_16 -> Int32_16
-plus32_16 arg1 arg2 =
+salsa20_16 : Int32_16 -> Int32_16
+salsa20_16 x =
+    plus_16 x (doubleround_n 10 x)
+
+
+plus_16 : Int32_16 -> Int32_16 -> Int32_16
+plus_16 arg1 arg2 =
     { y0 = plus arg1.y0 arg2.y0
     , y1 = plus arg1.y1 arg2.y1
     , y2 = plus arg1.y2 arg2.y2
@@ -189,4 +194,21 @@ plus32_16 arg1 arg2 =
     , y13 = plus arg1.y13 arg2.y13
     , y14 = plus arg1.y14 arg2.y14
     , y15 = plus arg1.y15 arg2.y15
+    }
+
+
+littleendian : Int -> Int -> Int -> Int -> Int
+littleendian b0 b1 b2 b3 =
+    safeShiftLeft 0 b0
+        + safeShiftLeft 8 b1
+        + safeShiftLeft 16 b2
+        + safeShiftLeft 24 b3
+
+
+littleendianInverse : Int -> { z0 : Int, z1 : Int, z2 : Int, z3 : Int }
+littleendianInverse i =
+    { z0 = Bitwise.shiftRightZfBy 0 i |> Bitwise.and 0xFF
+    , z1 = Bitwise.shiftRightZfBy 8 i |> Bitwise.and 0xFF
+    , z2 = Bitwise.shiftRightZfBy 16 i |> Bitwise.and 0xFF
+    , z3 = Bitwise.shiftRightZfBy 24 i |> Bitwise.and 0xFF
     }

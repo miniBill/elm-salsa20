@@ -1,7 +1,7 @@
 module Paper exposing (suite)
 
 import Expect
-import Fuzz
+import Fuzz exposing (Fuzzer)
 import Hex
 import Internal.Salsa20
 import Test exposing (Test, describe, fuzz2, fuzz3, test)
@@ -122,6 +122,34 @@ suite =
                     Internal.Salsa20.doubleround { y0 = 0xDE501066, y1 = 0x6F9EB8F7, y2 = 0xE4FBBD9B, y3 = 0x454E3F57, y4 = 0xB75540D3, y5 = 0x43E93A4C, y6 = 0x3A6F2AA0, y7 = 0x726D6B36, y8 = 0x9243F484, y9 = 0x9145D1E8, y10 = 0x4FA9D247, y11 = 0xDC8DEE11, y12 = 0x054BF545, y13 = 0x254DD653, y14 = 0xD9421B6D, y15 = 0x67B276C1 }
                         |> Expect.equal { y0 = 0xCCAAF672, y1 = 0x23D960F7, y2 = 0x9153E63A, y3 = 0xCD9A60D0, y4 = 0x50440492, y5 = 0xF07CAD19, y6 = 0xAE344AA0, y7 = 0xDF4CFDFC, y8 = 0xCA531C29, y9 = 0x8E7943DB, y10 = 0xAC1680CD, y11 = 0xD503CA00, y12 = 0xA74B2AD6, y13 = 0xBC331C5C, y14 = 0x1DDA24C7, y15 = 0xEE928277 }
             ]
+        , describe "littleendian"
+            [ test "0 0 0 0" <|
+                \_ ->
+                    Internal.Salsa20.littleendian 0 0 0 0
+                        |> equalHex 0
+            , test "86 75 30 9" <|
+                \_ ->
+                    Internal.Salsa20.littleendian 86 75 30 9
+                        |> equalHex 0x091E4B56
+            , test "255 255 255 250" <|
+                \_ ->
+                    Internal.Salsa20.littleendian 255 255 255 250
+                        |> equalHex 0xFAFFFFFF
+            ]
+        , let
+            byte : Fuzzer Int
+            byte =
+                Fuzz.intRange 0 255
+          in
+          fuzz2
+            (Fuzz.pair byte byte)
+            (Fuzz.pair byte byte)
+            "littleendian⁻¹"
+          <|
+            \( a, b ) ( c, d ) ->
+                Internal.Salsa20.littleendian a b c d
+                    |> Internal.Salsa20.littleendianInverse
+                    |> Expect.equal { z0 = a, z1 = b, z2 = c, z3 = d }
         ]
 
 
