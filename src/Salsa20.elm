@@ -9,7 +9,7 @@ module Salsa20 exposing
 
 #Types
 
-@docs SalsaBloc
+@docs SalsaBlock
 
 -}
 
