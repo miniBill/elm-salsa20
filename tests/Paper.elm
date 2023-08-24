@@ -5,7 +5,7 @@ import Bytes.Encode
 import Expect
 import Fuzz exposing (Fuzzer)
 import Hex
-import Internal.Salsa20 exposing (Int32_16, doubleround, init, littleendian, littleendianInverse, salsa20)
+import Internal.Salsa20 exposing (Int32_16, doubleround, expand, littleendian, littleendianInverse, parseKey, parseNonce, salsa20)
 import Test exposing (Test, describe, fuzz2, fuzz3, test)
 
 
@@ -206,6 +206,13 @@ suite =
             k1 =
                 encodeRange 201 216
 
+            k0k1 : Bytes
+            k0k1 =
+                [ k0, k1 ]
+                    |> List.map Bytes.Encode.bytes
+                    |> Bytes.Encode.sequence
+                    |> Bytes.Encode.encode
+
             n : Bytes
             n =
                 encodeRange 101 116
@@ -213,24 +220,34 @@ suite =
           describe "Salsa20_k"
             [ test "salsa20_{1...16, 210...216}(101...116)" <|
                 \_ ->
-                    init
-                        { key =
-                            [ k0, k1 ]
-                                |> List.map Bytes.Encode.bytes
-                                |> Bytes.Encode.sequence
-                                |> Bytes.Encode.encode
-                        , nonce = n
-                        }
-                        |> Maybe.map toBlock
-                        |> Expect.equal (Just <| SalsaBlock 101 120 112 97 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 110 100 32 51 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 50 45 98 121 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 116 101 32 107)
+                    case parseKey k0k1 of
+                        Nothing ->
+                            Expect.fail "Could not parse key"
+
+                        Just key ->
+                            case parseNonce n of
+                                Nothing ->
+                                    Expect.fail "Could not parse nonce"
+
+                                Just nonce ->
+                                    expand key nonce
+                                        |> toBlock
+                                        |> Expect.equal (SalsaBlock 101 120 112 97 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 110 100 32 51 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 50 45 98 121 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 116 101 32 107)
             , test "salsa20_{1...16}(101...116)" <|
                 \_ ->
-                    init
-                        { key = k0
-                        , nonce = n
-                        }
-                        |> Maybe.map toBlock
-                        |> Expect.equal (Just <| SalsaBlock 101 120 112 97 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 110 100 32 49 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 54 45 98 121 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 116 101 32 107)
+                    case parseKey k0 of
+                        Nothing ->
+                            Expect.fail "Could not parse key"
+
+                        Just key ->
+                            case parseNonce n of
+                                Nothing ->
+                                    Expect.fail "Could not parse nonce"
+
+                                Just nonce ->
+                                    expand key nonce
+                                        |> toBlock
+                                        |> Expect.equal (SalsaBlock 101 120 112 97 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 110 100 32 49 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 54 45 98 121 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 116 101 32 107)
             ]
         ]
 

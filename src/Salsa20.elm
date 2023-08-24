@@ -28,7 +28,7 @@ Returns `Nothing` if any of the lengths are wrong.
 -}
 init : { key : Bytes, nonce : Bytes } -> Maybe Key
 init { key, nonce } =
-    Internal.Salsa20.init { key = key, nonce = nonce }
+    Internal.Salsa20.expand { key = key, nonce = nonce }
         |> Maybe.map Key
 
 
