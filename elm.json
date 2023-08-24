@@ -1,7 +1,7 @@
 {
     "type": "package",
     "name": "miniBill/elm-salsa20",
-    "summary": "Salsa20 stream cipher",
+    "summary": "Implementation of the Salsa20 encryption and random number generation for Elm",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": [
