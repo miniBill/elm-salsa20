@@ -1,8 +1,6 @@
-module Internal.Salsa20 exposing (Int32_16, Int32_4, Key, Nonce, columnround, doubleround, expand, littleendian, littleendianInverse, parseKey, parseNonce, plus, quarterround, rotateLeftBy, rowround, salsa20, xor)
+module Internal.Salsa20 exposing (Int32_16, Int32_2, Int32_4, Key(..), Nonce(..), NonceAndCounter(..), columnround, doubleround, expand, littleendian, littleendianInverse, nonceAndCounter, plus, quarterround, rotateLeftBy, rowround, salsa20, xor)
 
 import Bitwise
-import Bytes exposing (Bytes)
-import Bytes.Decode
 
 
 plus : Int -> Int -> Int
@@ -63,6 +61,16 @@ quarterround y0 y1 y2 y3 =
     }
 
 
+{-| Two uint32. 8 bytes
+-}
+type alias Int32_2 =
+    { z0 : Int
+    , z1 : Int
+    }
+
+
+{-| Four uint32. 16 bytes
+-}
 type alias Int32_4 =
     { z0 : Int
     , z1 : Int
@@ -71,6 +79,8 @@ type alias Int32_4 =
     }
 
 
+{-| Sixteen uint32. 64 bytes.
+-}
 type alias Int32_16 =
     { y0 : Int
     , y1 : Int
@@ -230,33 +240,19 @@ type Key
 
 
 type Nonce
-    = Nonce Int32_4
+    = Nonce Int32_2
 
 
-parseNonce : Bytes -> Maybe Nonce
-parseNonce bytes =
-    bytes
-        |> Bytes.Decode.decode get16
-        |> Maybe.map Nonce
+nonceAndCounter (Nonce nonce) counter =
+    Debug.todo "nonceAndCounter"
 
 
-parseKey : Bytes -> Maybe Key
-parseKey bytes =
-    case Bytes.width bytes of
-        16 ->
-            Bytes.Decode.decode get16 bytes
-                |> Maybe.map (\k -> Key16 k)
-
-        32 ->
-            Bytes.Decode.decode get32 bytes
-                |> Maybe.map (\( k0, k1 ) -> Key32 k0 k1)
-
-        _ ->
-            Nothing
+type NonceAndCounter
+    = NonceAndCounter Int32_4
 
 
-expand : Key -> Nonce -> Int32_16
-expand key (Nonce nonce) =
+expand : Key -> NonceAndCounter -> Int32_16
+expand key (NonceAndCounter n) =
     case key of
         Key16 k ->
             { y0 = littleendian 101 120 112 97
@@ -265,10 +261,10 @@ expand key (Nonce nonce) =
             , y3 = k.z2
             , y4 = k.z3
             , y5 = littleendian 110 100 32 49
-            , y6 = nonce.z0
-            , y7 = nonce.z1
-            , y8 = nonce.z2
-            , y9 = nonce.z3
+            , y6 = n.z0
+            , y7 = n.z1
+            , y8 = n.z2
+            , y9 = n.z3
             , y10 = littleendian 54 45 98 121
             , y11 = k.z0
             , y12 = k.z1
@@ -284,10 +280,10 @@ expand key (Nonce nonce) =
             , y3 = k0.z2
             , y4 = k0.z3
             , y5 = littleendian 110 100 32 51
-            , y6 = nonce.z0
-            , y7 = nonce.z1
-            , y8 = nonce.z2
-            , y9 = nonce.z3
+            , y6 = n.z0
+            , y7 = n.z1
+            , y8 = n.z2
+            , y9 = n.z3
             , y10 = littleendian 50 45 98 121
             , y11 = k1.z0
             , y12 = k1.z1
@@ -295,17 +291,3 @@ expand key (Nonce nonce) =
             , y14 = k1.z3
             , y15 = littleendian 116 101 32 107
             }
-
-
-get16 : Bytes.Decode.Decoder Int32_4
-get16 =
-    let
-        u32 =
-            Bytes.Decode.unsignedInt32 Bytes.LE
-    in
-    Bytes.Decode.map4 Int32_4 u32 u32 u32 u32
-
-
-get32 : Bytes.Decode.Decoder ( Int32_4, Int32_4 )
-get32 =
-    Bytes.Decode.map2 Tuple.pair get16 get16
