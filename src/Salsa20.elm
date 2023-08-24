@@ -106,8 +106,15 @@ getBlock =
         get16
 
 
-putBlock : Int32_16 -> Bytes.Encode.Encoder
-putBlock block =
+encodeList : List Int -> Bytes.Encode.Encoder
+encodeList list =
+    list
+        |> List.map Bytes.Encode.unsignedInt8
+        |> Bytes.Encode.sequence
+
+
+encodeBlock : Int32_16 -> Bytes.Encode.Encoder
+encodeBlock block =
     let
         u32 : Int -> Bytes.Encode.Encoder
         u32 =
@@ -141,21 +148,12 @@ This function is symmetric, so it can be used for both encryption and decryption
 salsa20 : Key -> Nonce -> Bytes -> Bytes
 salsa20 key nonce input =
     let
-        keyBlock : Int -> Internal.Salsa20.Int32_16
-        keyBlock counter =
-            Internal.Salsa20.expand key
-                (Internal.Salsa20.nonceAndCounter
-                    nonce
-                    (toCounter counter)
-                )
-                |> Internal.Salsa20.salsa20
-
         width : Int
         width =
             Bytes.width input
 
-        blocks : Int
-        blocks =
+        blockCount : Int
+        blockCount =
             width // 64
 
         leftover : Int
@@ -163,81 +161,78 @@ salsa20 key nonce input =
             modBy 64 width
 
         fullBlock :
-            Int
-            -> List Bytes.Encode.Encoder
-            -> Bytes.Decode.Decoder (Bytes.Decode.Step ( Int, List Bytes.Encode.Encoder ) Bytes)
-        fullBlock counter acc =
-            getBlock
-                |> Bytes.Decode.map
-                    (\block ->
-                        Bytes.Decode.Loop
-                            ( counter + 1
-                            , putBlock (Internal.Salsa20.xor_16 (keyBlock counter) block)
-                                :: acc
-                            )
-                    )
+            Internal.Salsa20.Int32_16
+            -> Bytes.Decode.Decoder Bytes.Encode.Encoder
+        fullBlock keyBlock =
+            Bytes.Decode.map
+                (\block ->
+                    encodeBlock (Internal.Salsa20.xor_16 keyBlock block)
+                )
+                getBlock
 
         partialBlock :
-            Int
-            -> List Bytes.Encode.Encoder
-            -> Bytes.Decode.Decoder (Bytes.Decode.Step ( Int, List Bytes.Encode.Encoder ) Bytes)
-        partialBlock counter acc =
-            let
-                result =
-                    if leftover == 0 then
-                        Bytes.Decode.succeed acc
+            Internal.Salsa20.Int32_16
+            -> Bytes.Decode.Decoder Bytes.Encode.Encoder
+        partialBlock keyBlock =
+            if leftover == 0 then
+                Bytes.Decode.succeed (Bytes.Encode.sequence [])
 
-                    else
-                        let
-                            xor : Int32_16
-                            xor =
-                                keyBlock counter
+            else
+                let
+                    xorList : List Int
+                    xorList =
+                        [ keyBlock.y0, keyBlock.y1, keyBlock.y2, keyBlock.y3, keyBlock.y4, keyBlock.y5, keyBlock.y6, keyBlock.y7, keyBlock.y8, keyBlock.y9, keyBlock.y10, keyBlock.y11, keyBlock.y12, keyBlock.y13, keyBlock.y14, keyBlock.y15 ]
+                in
+                Bytes.Decode.loop ( leftover, [] )
+                    (\( i, bacc ) ->
+                        if i == 0 then
+                            List.map2
+                                Internal.Salsa20.xor
+                                (List.reverse bacc)
+                                xorList
+                                |> encodeList
+                                |> Bytes.Decode.Done
+                                |> Bytes.Decode.succeed
 
-                            xorList : List Int
-                            xorList =
-                                [ xor.y0, xor.y1, xor.y2, xor.y3, xor.y4, xor.y5, xor.y6, xor.y7, xor.y8, xor.y9, xor.y10, xor.y11, xor.y12, xor.y13, xor.y14, xor.y15 ]
-
-                            decoded =
-                                Bytes.Decode.loop ( leftover, [] )
-                                    (\( i, bacc ) ->
-                                        if i == 0 then
-                                            List.map2
-                                                Internal.Salsa20.xor
-                                                (List.reverse bacc)
-                                                xorList
-                                                |> List.map Bytes.Encode.unsignedInt8
-                                                |> Bytes.Encode.sequence
-                                                |> Bytes.Decode.Done
-                                                |> Bytes.Decode.succeed
-
-                                        else
-                                            Bytes.Decode.map
-                                                (\b -> Bytes.Decode.Loop ( i - 1, b :: bacc ))
-                                                Bytes.Decode.unsignedInt8
-                                    )
-                        in
-                        decoded
-                            |> Bytes.Decode.map (\d -> d :: acc)
-            in
-            result
-                |> Bytes.Decode.map
-                    (\encrypted ->
-                        encrypted
-                            |> List.reverse
-                            |> Bytes.Encode.sequence
-                            |> Bytes.Encode.encode
-                            |> Bytes.Decode.Done
+                        else
+                            Bytes.Decode.map
+                                (\b -> Bytes.Decode.Loop ( i - 1, b :: bacc ))
+                                Bytes.Decode.unsignedInt8
                     )
 
+        decoder : Bytes.Decode.Decoder Bytes
         decoder =
             Bytes.Decode.loop ( 0, [] )
                 (\( counter, acc ) ->
-                    if counter == blocks then
-                        partialBlock counter acc
+                    let
+                        keyBlock : Int32_16
+                        keyBlock =
+                            Internal.Salsa20.expand key
+                                (Internal.Salsa20.nonceAndCounter
+                                    nonce
+                                    (toCounter counter)
+                                )
+                                |> Internal.Salsa20.salsa20
+                    in
+                    if counter == blockCount then
+                        partialBlock keyBlock
+                            |> Bytes.Decode.map
+                                (\block -> Bytes.Decode.Done <| block :: acc)
 
                     else
-                        fullBlock counter acc
+                        fullBlock keyBlock
+                            |> Bytes.Decode.map
+                                (\block ->
+                                    Bytes.Decode.Loop ( counter + 1, block :: acc )
+                                )
                 )
+                |> Bytes.Decode.map
+                    (\blocks ->
+                        blocks
+                            |> List.reverse
+                            |> Bytes.Encode.sequence
+                            |> Bytes.Encode.encode
+                    )
     in
     Bytes.Decode.decode decoder input
         -- This should never happen
