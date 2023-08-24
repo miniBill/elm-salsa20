@@ -1,4 +1,4 @@
-module Internal.Salsa20 exposing (Int32_16, columnround, doubleround, littleendian, littleendianInverse, plus, quarterround, rotateLeftBy, rowround, salsa20_16, xor)
+module Internal.Salsa20 exposing (Int32_16, columnround, doubleround, littleendian, littleendianInverse, plus, quarterround, rotateLeftBy, rowround, salsa20, xor)
 
 import Bitwise
 
@@ -171,8 +171,8 @@ doubleround_n n x =
         doubleround_n (n - 1) (doubleround x)
 
 
-salsa20_16 : Int32_16 -> Int32_16
-salsa20_16 x =
+salsa20 : Int32_16 -> Int32_16
+salsa20 x =
     plus_16 x (doubleround_n 10 x)
 
 
