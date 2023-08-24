@@ -190,29 +190,29 @@ suite =
             --             |> toBlock
             --             |> Expect.equal (SalsaBlock 8 18 38 199 119 76 215 67 173 127 144 162 103 212 176 217 192 19 233 33 159 197 154 160 128 243 219 65 171 136 135 225 123 11 68 86 237 82 20 155 133 189 9 83 167 116 194 78 122 127 195 185 185 204 188 90 245 9 183 248 226 85 245 104)
             ]
-        , describe "Salsa20_k"
-            [ test "salsa20_{1...16, 210...216)(101...116)" <|
+        , let
+            encodeRange : Int -> Int -> Bytes
+            encodeRange from to =
+                List.range from to
+                    |> List.map Bytes.Encode.unsignedInt8
+                    |> Bytes.Encode.sequence
+                    |> Bytes.Encode.encode
+
+            k0 : Bytes
+            k0 =
+                encodeRange 1 16
+
+            k1 : Bytes
+            k1 =
+                encodeRange 201 216
+
+            n : Bytes
+            n =
+                encodeRange 101 116
+          in
+          describe "Salsa20_k"
+            [ test "salsa20_{1...16, 210...216}(101...116)" <|
                 \_ ->
-                    let
-                        encodeRange : Int -> Int -> Bytes
-                        encodeRange from to =
-                            List.range from to
-                                |> List.map Bytes.Encode.unsignedInt8
-                                |> Bytes.Encode.sequence
-                                |> Bytes.Encode.encode
-
-                        k0 : Bytes
-                        k0 =
-                            encodeRange 1 16
-
-                        k1 : Bytes
-                        k1 =
-                            encodeRange 201 216
-
-                        n : Bytes
-                        n =
-                            encodeRange 101 116
-                    in
                     init
                         { key =
                             [ k0, k1 ]
@@ -223,6 +223,14 @@ suite =
                         }
                         |> Maybe.map toBlock
                         |> Expect.equal (Just <| SalsaBlock 101 120 112 97 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 110 100 32 51 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 50 45 98 121 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 116 101 32 107)
+            , test "salsa20_{1...16}(101...116)" <|
+                \_ ->
+                    init
+                        { key = k0
+                        , nonce = n
+                        }
+                        |> Maybe.map toBlock
+                        |> Expect.equal (Just <| SalsaBlock 101 120 112 97 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 110 100 32 49 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 54 45 98 121 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 116 101 32 107)
             ]
         ]
 
