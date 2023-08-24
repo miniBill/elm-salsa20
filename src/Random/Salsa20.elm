@@ -1,13 +1,10 @@
-module Random.Salsa20 exposing
-    ( init, peel
-    , step
-    )
+module Random.Salsa20 exposing (State, init, step, peel)
 
-{-| Random generator API for Salsa20. This should be used with `NoRedInk/elm-random-general` to have a nice API for generating random, cryptographically secure, numbers.
+{-| Random generator API for Salsa20. This should be used with [NoRedInk/elm-random-general](https://package.elm-lang.org/packages/NoRedInk/elm-random-general/latest/Random-General) to have a nice API for generating random, cryptographically secure, numbers.
 
-Warning: if you use this module directly, it is _your_ responsibility to make sure you don't call `peel` more than once on the same `State`
+Warning: if you use this module directly (which you shouldn't, use elm-random-general), it is _your_ responsibility to make sure you don't call `peel` more than once on the same `State`
 
-@docs State, init, peel
+@docs State, init, step, peel
 
 -}
 
