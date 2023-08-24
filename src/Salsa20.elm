@@ -7,7 +7,8 @@ module Salsa20 exposing
 
 @docs salsa20
 
-#Types
+
+# Types
 
 @docs SalsaBlock
 
