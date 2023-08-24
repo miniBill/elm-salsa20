@@ -21,10 +21,14 @@ import Bytes.Encode
 import Internal.Salsa20 exposing (Counter(..), Int32_16, Int32_2, Int32_4, Key(..), Nonce(..))
 
 
+{-| Encryption key.
+-}
 type alias Key =
     Internal.Salsa20.Key
 
 
+{-| Nonce. A random unique code that should be unique for each message.
+-}
 type alias Nonce =
     Internal.Salsa20.Nonce
 

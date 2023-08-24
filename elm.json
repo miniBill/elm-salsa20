@@ -14,6 +14,7 @@
     },
     "test-dependencies": {
         "elm-explorations/test": "2.1.1 <= v < 3.0.0",
-        "rtfeldman/elm-hex": "1.0.0 <= v < 2.0.0"
+        "rtfeldman/elm-hex": "1.0.0 <= v < 2.0.0",
+        "jxxcarlson/hex": "4.0.0 <= v < 5.0.0"
     }
 }
