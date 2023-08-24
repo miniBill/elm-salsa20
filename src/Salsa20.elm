@@ -14,9 +14,10 @@ module Salsa20 exposing
 
 -}
 
+import Bitwise
 import Bytes exposing (Bytes)
 import Bytes.Decode
-import Internal.Salsa20 exposing (Int32_2, Int32_4, Key(..), Nonce(..))
+import Internal.Salsa20 exposing (Counter(..), Int32_2, Int32_4, Key(..), Nonce(..))
 
 
 type alias Key =
@@ -81,13 +82,22 @@ get32 =
 salsa20 : Key -> Nonce -> Bytes -> Bytes
 salsa20 key nonce input =
     let
+        keyBlock : Int -> Internal.Salsa20.Int32_16
         keyBlock counter =
             Internal.Salsa20.expand key
                 (Internal.Salsa20.nonceAndCounter
                     nonce
-                    counter
+                    (toCounter counter)
                 )
                 |> Internal.Salsa20.salsa20
     in
     keyBlock 0
         |> Debug.todo "salsa20"
+
+
+toCounter : Int -> Counter
+toCounter counter =
+    Counter
+        { z0 = counter |> Bitwise.shiftRightZfBy 0
+        , z1 = counter // 0x0000000100000000
+        }

@@ -1,4 +1,4 @@
-module Internal.Salsa20 exposing (Int32_16, Int32_2, Int32_4, Key(..), Nonce(..), NonceAndCounter(..), columnround, doubleround, expand, littleendian, littleendianInverse, nonceAndCounter, plus, quarterround, rotateLeftBy, rowround, salsa20, xor)
+module Internal.Salsa20 exposing (Counter(..), Int32_16, Int32_2, Int32_4, Key(..), Nonce(..), NonceAndCounter(..), columnround, doubleround, expand, littleendian, littleendianInverse, nonceAndCounter, plus, quarterround, rotateLeftBy, rowround, salsa20, xor)
 
 import Bitwise
 
@@ -239,12 +239,22 @@ type Key
     | Key32 Int32_4 Int32_4
 
 
+type Counter
+    = Counter Int32_2
+
+
 type Nonce
     = Nonce Int32_2
 
 
-nonceAndCounter (Nonce nonce) counter =
-    Debug.todo "nonceAndCounter"
+nonceAndCounter : Nonce -> Counter -> NonceAndCounter
+nonceAndCounter (Nonce nonce) (Counter counter) =
+    NonceAndCounter
+        { z0 = nonce.z0
+        , z1 = nonce.z1
+        , z2 = counter.z0
+        , z3 = counter.z1
+        }
 
 
 type NonceAndCounter
