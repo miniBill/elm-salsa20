@@ -1,6 +1,8 @@
-module Internal.Salsa20 exposing (Int32_16, columnround, doubleround, littleendian, littleendianInverse, plus, quarterround, rotateLeftBy, rowround, salsa20, xor)
+module Internal.Salsa20 exposing (Int32_16, Int32_4, columnround, doubleround, init, littleendian, littleendianInverse, plus, quarterround, rotateLeftBy, rowround, salsa20, xor)
 
 import Bitwise
+import Bytes exposing (Bytes)
+import Bytes.Decode
 
 
 plus : Int -> Int -> Int
@@ -35,7 +37,7 @@ safeShiftLeft c v =
         |> Bitwise.shiftRightZfBy 0
 
 
-quarterround : Int -> Int -> Int -> Int -> { z0 : Int, z1 : Int, z2 : Int, z3 : Int }
+quarterround : Int -> Int -> Int -> Int -> Int32_4
 quarterround y0 y1 y2 y3 =
     let
         z1 : Int
@@ -58,6 +60,14 @@ quarterround y0 y1 y2 y3 =
     , z1 = z1
     , z2 = z2
     , z3 = z3
+    }
+
+
+type alias Int32_4 =
+    { z0 : Int
+    , z1 : Int
+    , z2 : Int
+    , z3 : Int
     }
 
 
@@ -212,3 +222,72 @@ littleendianInverse i =
     , z2 = Bitwise.shiftRightZfBy 16 i |> Bitwise.and 0xFF
     , z3 = Bitwise.shiftRightZfBy 24 i |> Bitwise.and 0xFF
     }
+
+
+init : { key : Bytes, nonce : Bytes } -> Maybe Int32_16
+init { key, nonce } =
+    case Bytes.width key of
+        16 ->
+            Maybe.map2
+                (\k n ->
+                    { y0 = littleendian 101 120 112 97
+                    , y1 = k.z0
+                    , y2 = k.z1
+                    , y3 = k.z2
+                    , y4 = k.z3
+                    , y5 = littleendian 110 100 32 49
+                    , y6 = n.z0
+                    , y7 = n.z1
+                    , y8 = n.z2
+                    , y9 = n.z3
+                    , y10 = littleendian 54 45 98 121
+                    , y11 = k.z0
+                    , y12 = k.z1
+                    , y13 = k.z2
+                    , y14 = k.z3
+                    , y15 = littleendian 116 101 32 107
+                    }
+                )
+                (Bytes.Decode.decode get16 key)
+                (Bytes.Decode.decode get16 nonce)
+
+        32 ->
+            Maybe.map2
+                (\( k0, k1 ) n ->
+                    { y0 = littleendian 101 120 112 97
+                    , y1 = k0.z0
+                    , y2 = k0.z1
+                    , y3 = k0.z2
+                    , y4 = k0.z3
+                    , y5 = littleendian 110 100 32 51
+                    , y6 = n.z0
+                    , y7 = n.z1
+                    , y8 = n.z2
+                    , y9 = n.z3
+                    , y10 = littleendian 50 45 98 121
+                    , y11 = k1.z0
+                    , y12 = k1.z1
+                    , y13 = k1.z2
+                    , y14 = k1.z3
+                    , y15 = littleendian 116 101 32 107
+                    }
+                )
+                (Bytes.Decode.decode get32 key)
+                (Bytes.Decode.decode get16 nonce)
+
+        _ ->
+            Nothing
+
+
+get16 : Bytes.Decode.Decoder Int32_4
+get16 =
+    let
+        u32 =
+            Bytes.Decode.unsignedInt32 Bytes.LE
+    in
+    Bytes.Decode.map4 Int32_4 u32 u32 u32 u32
+
+
+get32 : Bytes.Decode.Decoder ( Int32_4, Int32_4 )
+get32 =
+    Bytes.Decode.map2 Tuple.pair get16 get16
