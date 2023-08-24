@@ -1,4 +1,4 @@
-module Internal.Salsa20 exposing (Counter(..), Int32_16, Int32_2, Int32_4, Key(..), Nonce(..), NonceAndCounter(..), columnround, doubleround, expand, littleendian, littleendianInverse, nonceAndCounter, plus, quarterround, rotateLeftBy, rowround, salsa20, xor)
+module Internal.Salsa20 exposing (Counter(..), Int32_16, Int32_2, Int32_4, Key(..), Nonce(..), NonceAndCounter(..), columnround, doubleround, expand, littleendian, littleendianInverse, nonceAndCounter, plus, quarterround, rotateLeftBy, rowround, salsa20, xor, xor_16)
 
 import Bitwise
 
@@ -214,6 +214,27 @@ plus_16 arg1 arg2 =
     , y13 = plus arg1.y13 arg2.y13
     , y14 = plus arg1.y14 arg2.y14
     , y15 = plus arg1.y15 arg2.y15
+    }
+
+
+xor_16 : Int32_16 -> Int32_16 -> Int32_16
+xor_16 arg1 arg2 =
+    { y0 = xor arg1.y0 arg2.y0
+    , y1 = xor arg1.y1 arg2.y1
+    , y2 = xor arg1.y2 arg2.y2
+    , y3 = xor arg1.y3 arg2.y3
+    , y4 = xor arg1.y4 arg2.y4
+    , y5 = xor arg1.y5 arg2.y5
+    , y6 = xor arg1.y6 arg2.y6
+    , y7 = xor arg1.y7 arg2.y7
+    , y8 = xor arg1.y8 arg2.y8
+    , y9 = xor arg1.y9 arg2.y9
+    , y10 = xor arg1.y10 arg2.y10
+    , y11 = xor arg1.y11 arg2.y11
+    , y12 = xor arg1.y12 arg2.y12
+    , y13 = xor arg1.y13 arg2.y13
+    , y14 = xor arg1.y14 arg2.y14
+    , y15 = xor arg1.y15 arg2.y15
     }
 
 
