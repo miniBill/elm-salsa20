@@ -1,7 +1,8 @@
 {
   "root": "../src",
   "tests": [
-    "REPLACEME",
+    "Salsa20",
+    "Random.Salsa20",
     "./README.md"
   ]
 }
