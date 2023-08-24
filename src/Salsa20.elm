@@ -165,7 +165,7 @@ salsa20 key nonce input =
             modBy 64 width
 
         fullBlock :
-            Internal.Salsa20.Int32_16
+            Int32_16
             -> Bytes.Decode.Decoder Bytes.Encode.Encoder
         fullBlock keyBlock =
             Bytes.Decode.map
@@ -175,7 +175,7 @@ salsa20 key nonce input =
                 getBlock
 
         partialBlock :
-            Internal.Salsa20.Int32_16
+            Int32_16
             -> Bytes.Decode.Decoder Bytes.Encode.Encoder
         partialBlock keyBlock =
             if leftover == 0 then

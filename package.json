@@ -1,9 +1,9 @@
 {
-  "name": "REPLACEME-AUTHOR-SLASH-REPO",
-  "version": "0.0.1",
-  "description": "REPLACEME",
+  "name": "elm-salsa20",
+  "version": "1.0.0",
+  "description": "Implementation of the Salsa20 encryption and random number generation for Elm",
   "devDependencies": {
-    "elm-review": "^2.7.5",
+    "elm-review": "^2.10.2",
     "elm-test": "latest-0.19.1",
     "elm-tooling": "1.6.0",
     "elm-verify-examples": "5.2.0",
@@ -13,6 +13,6 @@
     "test": "elm-verify-examples --run-tests && elm-test",
     "postinstall": "elm-tooling install"
   },
-  "author": "REPLACEME",
-  "license": "BSD-3-Clause"
+  "author": "Leonardo Taglialegne",
+  "license": "MIT"
 }
