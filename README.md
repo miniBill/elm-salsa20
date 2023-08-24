@@ -1,17 +1,9 @@
-# `replaceme` [![Build Status](https://github.com/REPLACEME-AUTHOR-SLASH-REPO/workflows/CI/badge.svg)](https://github.com/REPLACEME-AUTHOR-SLASH-REPO/actions?query=branch%3Amain)
+# `elm-salsa20` [![Build Status](https://github.com/miniBill/elm-salsa20/workflows/CI/badge.svg)](https://github.com/miniBill/elm-salsa20/actions?query=branch%3Amain)
 
-## What this repo includes
+`elm-salsa20` is a pure Elm implementation of the Salsa20 encryption algorithm. It can be used both for encryption/decryption (using the `Salsa20` module) and cryptographically secure random number generation.
 
-| What                                                              | Why?                                                                                                                                                                                                          |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| lydell/elm-tooling.json                                           | Install dependencies, cache them for faster GitHub Actions builds.                                                                                                                                            |
-| elm-test                                                          | Basic unit testing boilerplate and runs on GitHub Actions.                                                                                                                                                    |
-| [`jfmengels/elm-review`](https://github.com/jfmengels/elm-review) | Statically analyzes your code to find unused code, etc.                                                                                                                                                       |
-| dillonkearns/elm-publish-action                                   | Publishes your package whenever you bump your package version in elm.json on your default branch (`main` or `master`). It won't publish 1.0.0 for you, but it will release subsequent versions automatically. |
+It is mostly meant to be used in [lamdera](https://lamdera.com/), on the backend, for cryptographically secure random number generation.
 
-## Checklist
+If you need cryptographically secure random numbers on the frontend you should use `window.crypto.getRandomValues()`, possibly via [billstclair/elm-dev-random](https://package.elm-lang.org/packages/billstclair/elm-dev-random/latest/).
 
-- [ ] Replace this with a nice readme (see this guide for designing Elm packages and writing nice docs/READMEs: <https://github.com/dillonkearns/idiomatic-elm-package-guide>)
-- [ ] Find all instances of replaceme in this repo and replace them
-- [ ] Add a file called `LICENSE` to the top-level folder. This is required to publish an Elm package. The most common and recommended license for open source Elm packages is BSD-3.
-- [ ] Publish version 1.0.0 (you have to start at V1 with Elm packages). Run `elm publish` from the root folder of this repo when you're all ready, and it will walk you through the process!
+If you need encryption and decryption, you should libsodium, possibly using [libsodium.js](https://github.com/jedisct1/libsodium.js/). Using encryption and decryption primitives directly is a recipe for insecurity. See, e.g., https://stackoverflow.com/a/58360477.
